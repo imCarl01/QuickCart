@@ -1,0 +1,231 @@
+import { StyleSheet, Text, View, TextInput, ActivityIndicator, FlatList, Image } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import Wrapper from '../../Components/Wrapper'
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { TouchableOpacity } from 'react-native';
+import { deals } from '../../Service/ApiSection';
+import AntDesign from '@expo/vector-icons/AntDesign';
+import { products } from '../../DummyService/DummyAPi';
+
+export default function Home() {
+  const [search, setSearch] = useState("")
+  const [theDeals, setTheDeals] = useState([]);
+  const [isLoading, setISLoading] = useState(true)
+
+  // useEffect(() => {
+  //   const getDeels = async () => {
+  //     try {
+  //       const data = await deals();
+  //       console.log("API Data:", data); 
+        
+  //       if (data && data.length > 0) {
+  //         setTheDeals(data.slice(0, 6));
+  //         console.log("theDeals State:", data);
+  //       }
+  //     } catch (error) {
+  //       console.log("Not getting any deals:", error);
+  //     } finally {
+  //       setISLoading(false);
+  //     }
+  //   };
+  //   getDeels();
+  // }, []);
+  useEffect(() => {
+    const getProduct = async () => {
+      try {
+        const data = await products();
+        console.log("Fetched Data:", data);  // Log the fetched data to verify
+        setTheDeals(data);
+      } catch (error) {
+        console.log("Not getting any deals:", error);
+      } finally {
+        setISLoading(false);
+      }
+    };
+    getProduct();
+  }, []);
+  
+    // to show unique category i.e for it not to duplicate the category
+  // const getunquieCategory= (deals)=>{
+  //   const categories = deals.map(item => item.category);
+  //   return[...new Set(categories)]
+  // }
+
+  if (isLoading) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" color='#29a2ea'/>
+        <Text>Activating deals...</Text>
+      </View>
+    )
+  }
+
+  // const renderItemDeals = ({ item }) => {
+  //   return (
+  //     <View style={styles.dealContainer}>
+  //       <Text style={styles.badge}>{item.deal_badge}</Text>
+  //       <View style={{justifyContent: "center", alignItems: "center"}}>
+  //         <Image source={{ uri: item.deal_photo }} style={styles.dealImage} />
+  //       </View>
+  //       <Text style={styles.price}>
+  //         ${item.deal_price.amount} <Text style={styles.listPrice}>${item.list_price.amount}</Text>
+  //       </Text>
+  //       <Text style={styles.savings}>You save ${item.savings_amount.amount} ({item.savings_percentage}%)</Text>
+  //       <Text style={styles.dates}>
+  //         Starts: {new Date(item.deal_starts_at).toLocaleDateString()} - Ends: {new Date(item.deal_ends_at).toLocaleDateString()}
+  //       </Text>
+  //       <TouchableOpacity onPress={() => { /* Navigate to item.deal_url */ }}>
+  //         <Text style={styles.dealButton}>View Deal</Text>
+  //       </TouchableOpacity>
+
+  //       <TouchableOpacity style={styles.viewMore}>
+  //           <AntDesign name="rightcircleo" size={24} color="black" />
+  //           <Text>View More</Text>
+  //         </TouchableOpacity>
+  //     </View>
+  //   );
+  // };
+const renderItemDeals = ({ item }) => {
+  return (
+    <View style={styles.dealContainer}>
+      <Text style={styles.badge}>{item.discountPercentage}%</Text>
+      <View style={{ justifyContent: "center", alignItems: "center" }}>
+        <Image source={{ uri: item.images[0] }} style={styles.dealImage} /> {/* Accessing the first image */}
+      </View>
+      <Text style={styles.price}>
+        ${item.price}
+      </Text>
+      <Text style={styles.dates}>
+        Starts: {new Date(item.deal_starts_at).toLocaleDateString()} - Ends: {new Date(item.deal_ends_at).toLocaleDateString()}
+      </Text>
+      <TouchableOpacity onPress={() => { /* Navigate to item.deal_url */ }}>
+        <Text style={styles.dealButton}>View Deal</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+  return (
+    <Wrapper>
+      <View style={styles.header}>
+        <Text style={styles.appName}>QuickCart</Text>
+        <TouchableOpacity>
+          <Ionicons name="notifications-outline" size={24} color="black" />
+        </TouchableOpacity>
+      </View>
+      
+      <TextInput
+        placeholder='Search..'
+        value={search}
+        onChangeText={e => setSearch(e)}
+        style={styles.inputs}
+      />
+      
+      <View style={styles.dealContainer2}>
+        <View style={{flexDirection:"row"}}>
+        <FlatList
+        data={theDeals}
+        renderItem={renderItemDeals}
+        keyExtractor={(item) => item.id.toString()} // Ensure a unique key
+        horizontal
+        showsHorizontalScrollIndicator={false}
+      />
+      <TouchableOpacity style={styles.viewMore} onPress={() => {/* Navigate to more deals */}}>
+        <AntDesign name="rightcircleo" size={32} color="#29a2ea" />
+      </TouchableOpacity>
+
+        </View>
+
+     
+      </View>
+
+    </Wrapper>
+  )
+}
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+  },
+  appName: {
+    fontSize: 20,
+    fontWeight: "400",
+  },
+  inputs: {
+    borderWidth: 1,
+    padding: 10,
+    marginTop: 10,
+    borderRadius: 10,
+  },
+  loader: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dealContainer: {
+    padding: 15,
+    marginRight: 15,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 5,
+    elevation: 5,
+    width: 250, // Adjust to fit the horizontal layout
+  },
+  badge: {
+    color: '#ff0000',
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  dealImage: {
+    width: 100,
+    height: 200,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  price: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  listPrice: {
+    textDecorationLine: 'line-through',
+    color: '#888',
+    fontSize: 14,
+  },
+  savings: {
+    fontSize: 14,
+    color: 'green',
+    marginBottom: 10,
+  },
+  dates: {
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 15,
+  },
+  dealButton: {
+    backgroundColor: '#007BFF',
+    color: '#fff',
+    padding: 10,
+    textAlign: 'center',
+    borderRadius: 5,
+  },
+  dealContainer2: {
+    flexDirection: "row",
+    alignItems: "center", 
+    marginVertical: 15,
+  },
+  viewMore: {
+    justifyContent: "center",
+    alignSelf: "center",
+    padding:20,
+    // marginLeft: 10, 
+    backgroundColor:"red",
+ 
+  },
+  
+});
